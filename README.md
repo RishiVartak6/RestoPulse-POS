@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🍽️ ServeFlow POS
+# 🍽️ RestoPulse POS
 ### *Modern, Zero-Config, Offline-First Restaurant Point-of-Sale & QR Ordering System*
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111.0-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -84,7 +84,7 @@ flowchart TD
 
 ## 🚀 Zero-Config Deployment (Production)
 
-ServeFlow is engineered to run on any standard Windows PC without installing Python, Node.js, or database servers.
+RestoPulse is engineered to run on any standard Windows PC without installing Python, Node.js, or database servers.
 
 ### 1-Click Startup for Restaurants:
 1. Open the `RestaurantPOS-Release/` folder.
@@ -104,8 +104,8 @@ ServeFlow is engineered to run on any standard Windows PC without installing Pyt
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/RishiVartak6/Bill.git
-cd Bill
+git clone https://github.com/RishiVartak6/restopulse-pos.git
+cd restopulse-pos
 ```
 
 ### 2. Install Dependencies
@@ -137,7 +137,7 @@ The resulting executable will be created in `RestaurantPOS-Release/RestaurantPOS
 ## 📂 Project Directory Structure
 
 ```
-ServeFlow-POS/
+restopulse-pos/
 ├── backend/                    # FastAPI Backend & WebSocket Hub
 │   ├── app/
 │   │   ├── api/                # API Endpoints (Auth, Menu, Orders, Billing, Analytics)
