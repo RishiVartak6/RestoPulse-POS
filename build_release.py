@@ -4,7 +4,7 @@ import shutil
 import subprocess
 import dis
 
-# Monkey-patch dis._get_const_info to fix Python 3.10 bytecode index out of range bug in PyInstaller modulegraph
+# Monkey-patch dis._get_const_info to fix Python 3.10+ bytecode index out of range bug in PyInstaller modulegraph
 _original_get_const_info = dis._get_const_info
 def _patched_get_const_info(const_index, const_list):
     try:
@@ -33,12 +33,9 @@ def main():
     # 2. Run PyInstaller to compile Python backend + static frontends into a single EXE
     print("\n[Step 2] Packaging everything into a single executable (in-process)...")
     
-    # Change cwd to backend directory so PyInstaller runs in the backend context
     old_cwd = os.getcwd()
     try:
         os.chdir(backend_dir)
-        
-        # Run PyInstaller programmatically inside this process (with dis.py patched)
         import PyInstaller.__main__
         
         args = [
@@ -59,7 +56,7 @@ def main():
             '--hidden-import', 'uvicorn.lifespan.on',
             '--hidden-import', 'passlib.handlers.bcrypt',
             '--hidden-import', 'sqlalchemy.sql.default_comparator',
-            '-n', 'RestaurantPOS',
+            '-n', 'RestoPulse',
             'run.py'
         ]
         
@@ -71,7 +68,7 @@ def main():
     
     # 3. Create Release folder
     print("\n[Step 3] Creating release package...")
-    release_dir = os.path.join(root_dir, "RestaurantPOS-Release")
+    release_dir = os.path.join(root_dir, "RestoPulse-POS-Release")
     
     # Clear existing release
     if os.path.exists(release_dir):
@@ -80,18 +77,18 @@ def main():
     os.makedirs(os.path.join(release_dir, "uploads"), exist_ok=True)
     
     # Copy Compiled EXE
-    exe_src = os.path.join(backend_dir, "dist", "RestaurantPOS.exe")
-    exe_dest = os.path.join(release_dir, "RestaurantPOS.exe")
+    exe_src = os.path.join(backend_dir, "dist", "RestoPulse.exe")
+    exe_dest = os.path.join(release_dir, "RestoPulse.exe")
     
     print(f"Copying {exe_src} to {exe_dest}...")
     shutil.copy2(exe_src, exe_dest)
     
     # 4. Create README.txt instructions for restaurant owner
     readme_content = """============================================================
-              RESTAURANT POINT-OF-SALE (POS) SYSTEM
+              RESTOPULSE POINT-OF-SALE (POS) SYSTEM
 ============================================================
 
-Thank you for choosing our Restaurant POS! This system is a fully 
+Thank you for choosing RestoPulse POS! This system is a fully 
 self-hosted local solution that runs entirely on your PC.
 
 ------------------------------------------------------------
@@ -103,36 +100,23 @@ Node.js, or any other software. Everything is included in the application.
 ------------------------------------------------------------
 ▶️ HOW TO RUN
 ------------------------------------------------------------
-1. Simply double-click "RestaurantPOS.exe".
+1. Simply double-click "RestoPulse.exe".
 2. A window will open, and your default web browser will automatically 
    open the Admin Dashboard: http://localhost:8000/admin
 3. Keep the black window open while using the software. To shut down, 
    simply close the black window.
 
 ------------------------------------------------------------
-📱 CUSTOMER & TABLE ACCESS (Local Network)
-------------------------------------------------------------
-- Connect all customer mobile devices or tablet screens to the 
-  SAME Wi-Fi router network as this PC.
-- In the black window, you will see a "Customer App" network IP address 
-  (e.g., http://192.168.1.15:8000).
-- Open that IP address on any phone or tablet to place orders!
-- QR codes generated in the tables section will automatically link to 
-  this correct IP.
-
-------------------------------------------------------------
-🌐 ACCESS FROM ANY INTERNET CONNECTION (Mobile Data)
+🌐 ACCESS FROM ANY INTERNET CONNECTION (Mobile Data / QR)
 ------------------------------------------------------------
 This system automatically exposes itself to the internet on startup!
-When you launch "RestaurantPOS.exe", a secure public link is automatically
-created in the background (using Node's built-in tunneling).
+When you launch "RestoPulse.exe", a secure public link is automatically
+created in the background (using embedded zero-config tunneling).
 - Table QR codes generated in the Admin Panel will automatically link 
   to this public domain.
 - Customers can scan the QR codes and place orders from ANY internet
   connection (mobile data, other Wi-Fi, etc.) immediately!
-- The public link is saved to a configuration file named "tunnel_config.txt"
-  on the first run, so it stays the same on future launches.
-- Note: Keep the black "RestaurantPOS.exe" window open while using the software.
+- Note: Keep the black "RestoPulse.exe" window open while using the software.
 
 ------------------------------------------------------------
 🗄️ BACKUP YOUR DATA
@@ -160,9 +144,9 @@ created in the background (using Node's built-in tunneling).
     print(f" SUCCESS! Standalone Release Package Created!")
     print(f"Folder: {release_dir}")
     print(f"==================================================")
-    print(f"You can now ZIP the 'RestaurantPOS-Release' folder")
+    print(f"You can now ZIP the 'RestoPulse-POS-Release' folder")
     print(f"and send it to the restaurant owner. They will only")
-    print(f"see 'RestaurantPOS.exe', 'uploads' folder and 'README.txt'.")
+    print(f"see 'RestoPulse.exe', 'uploads' folder and 'README.txt'.")
     print(f"Your source code and files are completely safe!")
     print(f"==================================================")
 
