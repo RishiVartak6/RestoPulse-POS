@@ -1,10 +1,17 @@
 import os
 import sys
+import time
+import uuid
 import logging
+import sqlite3
+import threading
+import subprocess
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
+from sqlalchemy import inspect, text
+
 from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app.models import User, RestaurantSettings, Category, MenuItem, Table
@@ -37,7 +44,7 @@ app.add_middleware(
         "http://localhost:5174",   # Customer
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
-        "*",  # Remove in production
+        "*",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -59,14 +66,12 @@ app.include_router(ws_router)  # WebSocket without /api prefix
 
 
 def seed_database():
-    """Seed initial data on first run."""
+    """Seed initial schema, migrations, and default data on first run."""
     db = SessionLocal()
     try:
-        # Create tables
         Base.metadata.create_all(bind=engine)
 
         # Auto-migration: check if system_base_url exists in restaurant_settings table
-        from sqlalchemy import inspect, text
         inspector = inspect(engine)
         if inspector.has_table("restaurant_settings"):
             columns = [c["name"] for c in inspector.get_columns("restaurant_settings")]
@@ -84,7 +89,7 @@ def seed_database():
                 hashed_password=hash_password(settings.ADMIN_PASSWORD),
             )
             db.add(admin)
-            logger.info(f"Created admin user: {settings.ADMIN_EMAIL}")
+            logger.info(f"Created default admin user: {settings.ADMIN_EMAIL}")
 
         # Seed restaurant settings
         if not db.query(RestaurantSettings).first():
@@ -130,7 +135,6 @@ def seed_database():
 
         # Seed sample tables
         if not db.query(Table).first():
-            import uuid
             for i in range(1, 9):
                 token = str(uuid.uuid4()).replace("-", "")[:16]
                 table = Table(number=i, name=f"Table {i}", capacity=4, qr_token=token)
@@ -146,15 +150,7 @@ def seed_database():
 
 
 def start_tunnel():
-    import os
-    import sys
-    import time
-    import subprocess
-    import sqlite3
-    import logging
-
-    logger = logging.getLogger(__name__)
-
+    """Starts the Cloudflare Quick Tunnel to allow customers to order over public internet."""
     # Wait 3 seconds to let uvicorn bind port 8000 successfully
     time.sleep(3.0)
 
@@ -200,9 +196,7 @@ def start_tunnel():
                 parts = clean_line.split()
                 for p in parts:
                     if "trycloudflare.com" in p:
-                        url = p.strip()
-                        # Clean up formatting characters (like pipes) if present
-                        url = url.replace("|", "").strip()
+                        url = p.strip().replace("|", "")
                         if not url.startswith("http"):
                             url = "https://" + url
                         break
@@ -232,7 +226,6 @@ async def startup():
     logger.info(f"Docs at http://localhost:{settings.APP_PORT}/api/docs")
 
     # Start persistent internet tunnel in the background
-    import threading
     threading.Thread(target=start_tunnel, daemon=True).start()
 
 
@@ -288,5 +281,3 @@ def serve_customer_root_files(filename: str):
 def serve_root():
     """Redirect root to admin panel so the EXE opens the admin dashboard."""
     return RedirectResponse(url="/admin")
-
-
